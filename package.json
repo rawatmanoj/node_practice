@@ -1,0 +1,19 @@
+{
+  "name": "node_practice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "node1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rawatmanoj/node_practice.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rawatmanoj/node_practice/issues"
+  },
+  "homepage": "https://github.com/rawatmanoj/node_practice#readme"
+}
