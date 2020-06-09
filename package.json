@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start:dev": "nodemon server.js",
+    "start": "nodemon server.js",
     "start:prod": "NODE_ENV=production nodemon server.js"
   },
   "repository": {
@@ -18,10 +18,11 @@
   },
   "homepage": "https://github.com/rawatmanoj/node_practice#readme",
   "dependencies": {
-    "express": "^4.17.1",
-    "nodemon": "^2.0.4",
     "dotenv": "^7.0.0",
-    "morgan": "^1.9.1"
+    "express": "^4.17.1",
+    "mongoose": "^5.9.18",
+    "morgan": "^1.9.1",
+    "nodemon": "^2.0.4"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
@@ -33,5 +34,8 @@
     "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-react": "^7.12.4",
     "prettier": "^1.17.0"
+  },
+  "engines": {
+    "node": ">=10.0.0"
   }
 }
