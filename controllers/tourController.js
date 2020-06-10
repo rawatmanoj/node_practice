@@ -31,8 +31,21 @@ exports.getAllTours = async (req, res) => {
   // console.log(req.requestTime);
 
   try {
-    const tours = await Tour.find();
+    //console.log(req.query);
+
+    const queryObj = { ...req.query };
+    const excludeFields = ['page', 'sort', 'limit', 'fields'];
+
+    excludeFields.forEach(el => delete queryObj[el]);
+    // console.log(req.query, queryObj);
+    const tours = await Tour.find(queryObj);
     //  console.log(tours);
+
+    // const tours = await Tour.find()
+    //   .where('duration')
+    //   .equals(5)
+    //   .where('difficulty')
+    //   .equals('easy');
 
     res.status(200).json({
       status: 'success',
@@ -89,7 +102,7 @@ exports.createTour = async (req, res) => {
     res.status(404).json({
       status: 'fail',
       data: {
-        message: 'invalid data sent'
+        message: error
       }
     });
   }
