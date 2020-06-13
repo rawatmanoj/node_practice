@@ -1,31 +1,13 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
 const Tour = require('../controllers/models/tourModel');
+const APIFeatures = require('./../utils/apiFeatures');
 
-// const tours = JSON.parse(
-//   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
-// );
-
-// exports.checkID = (req, res, next, val) => {
-//   console.log(`Tour id is: ${val}`);
-
-//   if (req.params.id * 1 > tours.length) {
-//     return res.status(404).json({
-//       status: 'fail',
-//       message: 'Invalid ID'
-//     });
-//   }
-//   next();
-// };
-
-// exports.checkBody = (req, res, next) => {
-//   if (!req.body.name || !req.body.price) {
-//     return res.status(400).json({
-//       status: 'fail',
-//       message: 'Missing name or price'
-//     });
-//   }
-//   next();
-// };
+exports.aliasTopTours = async (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+  next();
+};
 
 exports.getAllTours = async (req, res) => {
   // console.log(req.requestTime);
@@ -33,31 +15,15 @@ exports.getAllTours = async (req, res) => {
   try {
     //BUILD QUERY
     console.log(req.query);
-    //1 Filtering
-    const queryObj = { ...req.query };
-    const excludeFields = ['page', 'sort', 'limit', 'fields'];
-
-    excludeFields.forEach(el => delete queryObj[el]);
-
-    //2 Advanced filtering
-
-    let queryStr = JSON.stringify(queryObj);
-
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-
-    //console.log(JSON.parse(queryStr));
-
-    const query = Tour.find(JSON.parse(queryStr));
-
-    //  console.log(tours);
 
     // EXECUTE QUERY
-    const tours = await query;
-    // const tours = await Tour.find()
-    //   .where('duration')
-    //   .equals(5)
-    //   .where('difficulty')
-    //   .equals('easy');
+
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tours = await features.query;
 
     res.status(200).json({
       status: 'success',
@@ -71,7 +37,7 @@ exports.getAllTours = async (req, res) => {
     res.status(400).json({
       status: 'fail',
       data: {
-        message: 'invalid data sent'
+        message: error
       }
     });
   }
@@ -155,6 +121,86 @@ exports.deleteTour = async (req, res) => {
       status: 'fail',
       data: {
         message: 'invalid data sent'
+      }
+    });
+  }
+};
+
+exports.getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } }
+      },
+      {
+        $group: {
+          _id: { $toUpper: '$difficulty' },
+          numTours: { $sum: 1 },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' }
+        }
+      },
+      {
+        $sort: { avgPrice: 1 }
+      }
+      // {
+      //   $match: { _id: { $ne: 'EASY' } }
+      // }
+    ]);
+    res.status(200).json({
+      status: 'success',
+      data: stats
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      data: {
+        message: error
+      }
+    });
+  }
+};
+
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates'
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          // startDates: '$startDates',
+          numToursStats: { $sum: 1 },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: plan
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      data: {
+        message: error
       }
     });
   }
