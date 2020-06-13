@@ -182,14 +182,26 @@ exports.getMonthlyPlan = async (req, res) => {
       {
         $group: {
           _id: { $month: '$startDates' },
-          // startDates: '$startDates',
           numToursStats: { $sum: 1 },
-          avgRating: { $avg: '$ratingsAverage' },
-          avgPrice: { $avg: '$price' },
-          minPrice: { $min: '$price' },
-          maxPrice: { $max: '$price' }
+          tours: {
+            $push: '$name'
+          }
         }
+      },
+      {
+        $addFields: { month: '$_id' }
+      },
+      {
+        $project: {
+          _id: 0
+        }
+      },
+      {
+        $sort: { numToursStats: -1 }
       }
+      // {
+      //   $limit: 12
+      // }
     ]);
 
     res.status(200).json({
